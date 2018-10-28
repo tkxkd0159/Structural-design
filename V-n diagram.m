@@ -1,5 +1,6 @@
 
 
+
 clear all
 clc
 close all
@@ -40,9 +41,9 @@ ng22 = 1-((k*u2*v*cla)/(498*WL)); %high gust load factor
 ng33 = 1-((k*u3*v*cla)/(498*WL)); %dive gust load factor
 
 
-inx = (v <= vd); %velocity array position less than dive speed
-n( n>= nlimit ) = nlimit; % restrict positive load factor
-nn( nn <= nnlimit )= nnlimit; % restrict negative load factor
+
+n( n > nlimit ) = nlimit; % restrict positive load factor
+nn( nn < nnlimit )= nnlimit; % restrict negative load factor
 n( v >= vd) = 0; % positive load factor = 0 at dive speed
 nn( v >= vd) = 0; % negative load factor = 0 at dive speed
 
@@ -79,30 +80,16 @@ gx2(i) = gx2(2002)+(i-2003)*(vd-vc)/1000;
 gy2(i) = (ngp33-ngp22)/(vd-vc)*gx2(i)-(ngp33-ngp22)/(vd-vc)*gx2(2002)+gy2(2002);
 end
 
-% tmp = nnlimit+((-nnlimit./(vd-vc)).*(v-vc));
-% nn( v >= vc) = tmp(v >= vc);
-% na=(d*cl*(v.^2))/(2*WL);
-% ndivea=-na;
-% inxa = (v <= vd);
-% na( na>=2.828) = 2.828;
-% tm = 3.169+(((3.169-2.828)./(380-242.6)).*(v-380));
-% na( v >=242.6) = tm(v >= 242.6);
-% mp = 2.356+(((2.356-3.169)./(vd-vc)).*(v-vd));
-% na( v >=380) = mp(v >= 380);
-% na( v >= vd) = 0;
-% ndivea( ndivea <= nnlimit )= nnlimit;
-% tmp1 = (-1)+(((1-1.169)./(vc-265.5)).*(v-265.5));
-% ndivea( v >= 265.5) = tmp1(v >= 265.5);
-% tmp = -1.169+(((1.169-0.3556)./(vd-vc)).*(v-vc));
-% ndivea( v >= vc) = tmp(v >= vc);
-% ndivea( v >= vd) = 0;
+
 
 figure(1)
 
 % Maneuever envelope
-a1 = plot(v(inx),nn(inx),'b', 'LineWidth',2);
+a1 = plot(v,n, 'b','LineWidth',2);
 hold on
-plot(v(inx),n(inx), 'b','LineWidth',2);
+plot(v,nn,'b', 'LineWidth',2);
+
+
 
 
 % Gust envelope
@@ -122,7 +109,7 @@ plot(v,ng33,'m--', 'LineWidth',1)
 xv = vc;  
 ystart = 5;
  yend = -3;
- a6 = plot([xv xv], [ystart yend],':','LineWidth',2)
+ a6 = plot([xv xv], [ystart yend],':','LineWidth',2);
 
 legend([a1, a2, a3, a4, a5, a6],{'Maneuever envelope', 'Gust envelope','Rough air gust',... 
         'High speed gust', 'Dive gust','Cruise speed'})
