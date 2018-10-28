@@ -1,75 +1,132 @@
 
+
 clear all
 clc
 close all
-% 1 knot = 1.688 ft/s
-d=0.00089068; %density, slug/ft^3 , alt = 30000ft
-cl=1.3;   %lift coefficient
-c = 8.53;  %mean aerodynamic chord
-S= 890; % wing area, ft^2
-W= 66000; %MTOW , lb
-WL=66000/890;  % wingload
+% 0.592 knot = 1 ft/s, 1 knot = 1.688 ft/s
+% load factor = Total lift/ weight
+
+d=0.001756; %density, slug/ft^3 , alt = 10000ft
+cl=1.4;   %max lift coefficient
+c = 4.43;  %mean aerodynamic chord, ft
+b = 36; % wingspan
+S= 176; % wing area, ft^2
+AR = b^2/S; %aspect ratio 
+W= 3600; %MTOW , lb
+WL=W/S;  % wingload
 g= 32.26; % gravity acceleration ft/s^2  
-a=2; % CL_alpha
-mu=(2*WL)/(d*g*c*a); % mass ratio
+cla=4.42; % fig 3.4.14 find with AR and times 180/3.14
+mu=(2*WL)/(d*g*c*cla); % mass ratio
 k=(0.88*mu)/(5.3+mu); % gust alleviation factor in subsonic
 
 u1=66; % rough air gust, ft/s, U_de
 u2=50; % high speed gust, ft/s, U_de
 u3=25; % dive speed gust, ft/s, U_de
-vc=640; %cruise speed, knots
-vd=vc*1.25; % dive speed
-nlimit=2.5;
-ndivelimit=-1;
-velocity=0 : 0.1 : vd + 1.1;
-n=(d*cl*(velocity.^2))/(2*WL);
-n2=(d*cl*(velocity.^2))/(2*WL);
-ndive=-n;
+vc = 142; %cruise speed, knots
+vd = vc*1.25; % dive speed, typically vc*1.25
+vb = vd/2; % maneuever speed at rough air gust
+nlimit=2.1+24000/(W+10000); %maximum positive load factor, more than 2.1+24000/(W+10000)
+nnlimit=-1; %maximum negative load factor
 
-ng1 = 1+((k*u1*velocity*a)/(498*WL));
-ng2 = 1+((k*u2*velocity*a)/(498*WL));
-ng3 = 1+((k*u3*velocity*a)/(498*WL));
-ng11 = 1-((k*u1*velocity*a)/(498*WL));
-ng22 = 1-((k*u2*velocity*a)/(498*WL));
-ng33 = 1-((k*u3*velocity*a)/(498*WL));
+v=0 : 0.1 : vd; % velocity
+n=(d*cl*((1.69*v).^2))/(2*WL); % load fator
+nn=-n;
 
-inx = (velocity <= vd);
-n( n>= nlimit ) = nlimit;
-n( velocity >= vd) = 0;
-ndive( velocity >= vd) = 0;
-ndive( ndive <= ndivelimit )= ndivelimit;
-tmp = ndivelimit+((-ndivelimit./(vd-vc)).*(velocity-vc));
-ndive( velocity >= vc) = tmp(velocity >= vc);
-na=(d*cl*(velocity.^2))/(2*WL);
-ndivea=-na;
-inxa = (velocity <= vd);
-na( na>=2.828) = 2.828;
-tm = 3.169+(((3.169-2.828)./(380-242.6)).*(velocity-380));
-na( velocity >=242.6) = tm(velocity >= 242.6);
-mp = 2.356+(((2.356-3.169)./(vd-vc)).*(velocity-vd));
-na( velocity >=380) = mp(velocity >= 380);
-na( velocity >= vd) = 0;
-ndivea( ndivea <= ndivelimit )= ndivelimit;
-tmp1 = (-1)+(((1-1.169)./(vc-265.5)).*(velocity-265.5));
-ndivea( velocity >= 265.5) = tmp1(velocity >= 265.5);
-tmp = -1.169+(((1.169-0.3556)./(vd-vc)).*(velocity-vc));
-ndivea( velocity >= vc) = tmp(velocity >= vc);
-ndivea( velocity >= vd) = 0;
+ng1 = 1+((k*u1*v*cla)/(498*WL)); %rough air gust load factor
+ng2 = 1+((k*u2*v*cla)/(498*WL)); %high speed gust load factor
+ng3 = 1+((k*u3*v*cla)/(498*WL)); %dive gust load factor
+ng11 = 1-((k*u1*v*cla)/(498*WL)); %rough air gust load factor
+ng22 = 1-((k*u2*v*cla)/(498*WL)); %high gust load factor
+ng33 = 1-((k*u3*v*cla)/(498*WL)); %dive gust load factor
 
-figure(1);
-plot(velocity(inxa),ndivea(inxa),'r', 'LineWidth',2)
+
+inx = (v <= vd); %velocity array position less than dive speed
+n( n>= nlimit ) = nlimit; % restrict positive load factor
+nn( nn <= nnlimit )= nnlimit; % restrict negative load factor
+n( v >= vd) = 0; % positive load factor = 0 at dive speed
+nn( v >= vd) = 0; % negative load factor = 0 at dive speed
+
+ngp1 = 1+((k*u1*vb*cla)/(498*WL)); % rough air gust point
+ngp2 = 1+((k*u2*vc*cla)/(498*WL)); % high speed air gust point
+ngp3 = 1+((k*u3*vd*cla)/(498*WL)); % dive speed air gust point
+ngp11 = 1-((k*u1*vb*cla)/(498*WL)); % - rough air gust point 
+ngp22 = 1-((k*u2*vc*cla)/(498*WL)); % - high speed air gust point
+ngp33 = 1-((k*u3*vd*cla)/(498*WL)); % - dive speed air gust point
+
+for i = 1:1001
+gx(i) = 0+(i-1)*vb/1000;
+gy(i) = (ngp1-1)/vb*gx(i)+1;
+end
+for i = 1002:2002
+gx(i) = gx(1001)+(i-1002)*(vc-vb)/1000;
+gy(i) = (ngp2-ngp1)/(vc-vb)*gx(i)-(ngp2-ngp1)/(vc-vb)*gx(1001)+gy(1001);
+end
+for i = 2003:3003
+gx(i) = gx(2002)+(i-2003)*(vd-vc)/1000;
+gy(i) = (ngp3-ngp2)/(vd-vc)*gx(i)-(ngp3-ngp2)/(vd-vc)*gx(2002)+gy(2002);
+end
+
+for i = 1:1001
+gx2(i) = 0+(i-1)*vb/1000;
+gy2(i) = (ngp11-1)/vb*gx2(i)+1;
+end
+for i = 1002:2002
+gx2(i) = gx2(1001)+(i-1002)*(vc-vb)/1000;
+gy2(i) = (ngp22-ngp11)/(vc-vb)*gx2(i)-(ngp22-ngp11)/(vc-vb)*gx2(1001)+gy2(1001);
+end
+for i = 2003:3003
+gx2(i) = gx2(2002)+(i-2003)*(vd-vc)/1000;
+gy2(i) = (ngp33-ngp22)/(vd-vc)*gx2(i)-(ngp33-ngp22)/(vd-vc)*gx2(2002)+gy2(2002);
+end
+
+% tmp = nnlimit+((-nnlimit./(vd-vc)).*(v-vc));
+% nn( v >= vc) = tmp(v >= vc);
+% na=(d*cl*(v.^2))/(2*WL);
+% ndivea=-na;
+% inxa = (v <= vd);
+% na( na>=2.828) = 2.828;
+% tm = 3.169+(((3.169-2.828)./(380-242.6)).*(v-380));
+% na( v >=242.6) = tm(v >= 242.6);
+% mp = 2.356+(((2.356-3.169)./(vd-vc)).*(v-vd));
+% na( v >=380) = mp(v >= 380);
+% na( v >= vd) = 0;
+% ndivea( ndivea <= nnlimit )= nnlimit;
+% tmp1 = (-1)+(((1-1.169)./(vc-265.5)).*(v-265.5));
+% ndivea( v >= 265.5) = tmp1(v >= 265.5);
+% tmp = -1.169+(((1.169-0.3556)./(vd-vc)).*(v-vc));
+% ndivea( v >= vc) = tmp(v >= vc);
+% ndivea( v >= vd) = 0;
+
+figure(1)
+
+% Maneuever envelope
+a1 = plot(v(inx),nn(inx),'b', 'LineWidth',2);
 hold on
-plot(velocity(inxa),na(inxa), 'r','LineWidth',2);
-plot(velocity(inx),ndive(inx),'b', 'LineWidth',2)
-hold on
-plot(velocity(inx),n(inx), 'b','LineWidth',2);
-hold on;
-plot(velocity,ng1,'r:', 'LineWidth',2)
-hold on;
-plot(velocity,ng2,'r:', 'LineWidth',2)
-hold on;
-plot(velocity,ng3,'r:', 'LineWidth',2)
-hold on;
-grid on;
+plot(v(inx),n(inx), 'b','LineWidth',2);
+
+
+% Gust envelope
+ a2 = plot(gx,gy,'r', 'LineWidth',2);
+ plot(gx2,gy2, 'r','LineWidth',2);
+ 
+%Gust line 
+a3 = plot(v,ng1,'m:', 'LineWidth',1);
+a4 = plot(v,ng2,'m-', 'LineWidth',1);
+a5 = plot(v,ng3,'m--', 'LineWidth',1);
+
+plot(v,ng11,'m:', 'LineWidth',1)
+plot(v,ng22,'m-', 'LineWidth',1)
+plot(v,ng33,'m--', 'LineWidth',1)
+
+% velocity check line
+xv = vc;  
+ystart = 5;
+ yend = -3;
+ a6 = plot([xv xv], [ystart yend],':','LineWidth',2)
+
+legend([a1, a2, a3, a4, a5, a6],{'Maneuever envelope', 'Gust envelope','Rough air gust',... 
+        'High speed gust', 'Dive gust','Cruise speed'})
+grid on
 title('V-n diagram');
-xlabel('velocity');ylabel('Load Factor');
+xlabel('velocity(knot)');ylabel('Load Factor');
+xlim([0 vd+10])
