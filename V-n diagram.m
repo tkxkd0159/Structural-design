@@ -1,6 +1,4 @@
 
-
-
 clear all
 clc
 close all
@@ -8,7 +6,7 @@ close all
 % load factor = Total lift/ weight
 
 d=0.001756; %density, slug/ft^3 , alt = 10000ft
-cl=1.4;   %max lift coefficient
+cl=1.6;   %max lift coefficient, Reynolds number = 6500000
 c = 4.43;  %mean aerodynamic chord, ft
 b = 36; % wingspan
 S= 176; % wing area, ft^2
@@ -23,7 +21,7 @@ k=(0.88*mu)/(5.3+mu); % gust alleviation factor in subsonic
 u1=66; % rough air gust, ft/s, U_de
 u2=50; % high speed gust, ft/s, U_de
 u3=25; % dive speed gust, ft/s, U_de
-vc = 142; %cruise speed, knots
+vc = 180; %cruise speed, knots
 vd = vc*1.25; % dive speed, typically vc*1.25
 vb = vd/2; % maneuever speed at rough air gust
 nlimit=2.1+24000/(W+10000); %maximum positive load factor, more than 2.1+24000/(W+10000)
@@ -39,8 +37,8 @@ ng3 = 1+((k*u3*v*cla)/(498*WL)); %dive gust load factor
 ng11 = 1-((k*u1*v*cla)/(498*WL)); %rough air gust load factor
 ng22 = 1-((k*u2*v*cla)/(498*WL)); %high gust load factor
 ng33 = 1-((k*u3*v*cla)/(498*WL)); %dive gust load factor
-
-
+temp = roots([(d*cl*((1.69)^2))/(2*WL) -((k*u1*cla)/(498*WL)) -1]);
+vb=temp(temp>0);
 
 n( n > nlimit ) = nlimit; % restrict positive load factor
 nn( nn < nnlimit )= nnlimit; % restrict negative load factor
