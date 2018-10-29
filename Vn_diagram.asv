@@ -21,7 +21,7 @@ k=(0.88*mu)/(5.3+mu); % gust alleviation factor in subsonic
 u1=66; % rough air gust, ft/s, U_de
 u2=50; % high speed gust, ft/s, U_de
 u3=25; % dive speed gust, ft/s, U_de
-vc = 180; %cruise speed, knots
+vc = 170; %cruise speed, knots
 vd = vc*1.25; % dive speed, typically vc*1.25
 vb = vd/2; % maneuever speed at rough air gust
 nlimit=2.1+24000/(W+10000); %maximum positive load factor, more than 2.1+24000/(W+10000)
@@ -44,6 +44,12 @@ n( n > nlimit ) = nlimit; % restrict positive load factor
 nn( nn < nnlimit )= nnlimit; % restrict negative load factor
 n( v >= vd) = 0; % positive load factor = 0 at dive speed
 nn( v >= vd) = 0; % negative load factor = 0 at dive speed
+
+for i = find(v==vc) : find(v==vd)
+    
+    nn(i) = nlimit/(vd-vc)*(v(i)-vc)+nlimit
+    
+end
 
 ngp1 = 1+((k*u1*vb*cla)/(498*WL)); % rough air gust point
 ngp2 = 1+((k*u2*vc*cla)/(498*WL)); % high speed air gust point
@@ -108,6 +114,10 @@ xv = vc;
 ystart = 5;
  yend = -3;
  a6 = plot([xv xv], [ystart yend],':','LineWidth',2);
+ 
+ temp = find(n<=1);
+ temp = sort(temp,'descend');
+ vs = v(temp(2));
 
 legend([a1, a2, a3, a4, a5, a6],{'Maneuever envelope', 'Gust envelope','Rough air gust',... 
         'High speed gust', 'Dive gust','Cruise speed'})
