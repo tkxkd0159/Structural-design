@@ -5,29 +5,29 @@ close all
 % 0.592 knot = 1 ft/s, 1 knot = 1.688 ft/s
 % load factor = Total lift/ weight
 
-d=0.001756; %density, slug/ft^3 , alt = 10000ft
+d=0.0021; %density, slug/ft^3 , alt = 5000ft
 cl=1.6;   %max lift coefficient, Reynolds number = 6500000
-c = 4.43;  %mean aerodynamic chord, ft
-b = 36; % wingspan
-S= 176; % wing area, ft^2
+c = 4.5;  %mean aerodynamic chord, ft
+b = 36.74; % wingspan
+S= 175; % wing area, ft^2
 AR = b^2/S; %aspect ratio 
-W= 3600; %MTOW , lb
+W= 4000; %MTOW , lb
 WL=W/S;  % wingload
 g= 32.26; % gravity acceleration ft/s^2  
-cla=4.42; % fig 3.4.14 find with AR and times 180/3.14
+cla=4.5; % fig 3.4.14 find with AR and times 180/3.14
 mu=(2*WL)/(d*g*c*cla); % mass ratio
 k=(0.88*mu)/(5.3+mu); % gust alleviation factor in subsonic
 
 u1=66; % rough air gust, ft/s, U_de
 u2=50; % high speed gust, ft/s, U_de
 u3=25; % dive speed gust, ft/s, U_de
-vc = 170; %cruise speed, knots
+vc = 193; %cruise speed, knots
 vd = vc*1.25; % dive speed, typically vc*1.25
 vb = vd/2; % maneuever speed at rough air gust
 nlimit=2.1+24000/(W+10000); %maximum positive load factor, more than 2.1+24000/(W+10000)
-nnlimit=-1; %maximum negative load factor
+nnlimit=-1.5; %maximum negative load factor
 
-v=0 : 0.1 : vd; % velocity
+v=0 : 0.01 : vd; % velocity
 n=(d*cl*((1.69*v).^2))/(2*WL); % load fator
 nn=-n;
 
