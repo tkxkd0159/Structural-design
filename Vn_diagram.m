@@ -127,3 +127,5 @@ grid on
 title('V-n diagram');
 xlabel('velocity(knot)');ylabel('Load Factor');
 xlim([0 vd+10])
+
+axis('square')
